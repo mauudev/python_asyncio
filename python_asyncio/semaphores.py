@@ -3,6 +3,10 @@ from asyncio import Semaphore
 
 from aiohttp import ClientSession
 
+# Evitar a toda costa llamar implicitamente semaphore.release
+# descuenta el contador interno y se producen errores extranios
+# que pueden ocasionar race conditions. Usar siempre como async context manager
+
 
 async def get_url(url: str, session: ClientSession, semaphore: Semaphore):
     print("Waiting to acquire semaphore...")
