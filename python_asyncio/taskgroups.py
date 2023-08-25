@@ -33,7 +33,6 @@ async def main():
                 tg.create_task(delayed_task(9))
                 tg.create_task(fetch_data(0))
                 tg.create_task(read_file("banana.png"))
-            await tg
             print(task.result())
     except* FileNotFoundError as eg:
         for error in eg.exceptions:
