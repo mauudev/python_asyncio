@@ -16,9 +16,12 @@ class TaskGroupManager:
 
     async def run(self):
         self.task_group = asyncio.TaskGroup()
-
-        async with self.task_group:
-            await self.execute_tasks()
+        try:
+            async with self.task_group:
+                await self.execute_tasks()
+        except* Exception as eg:
+            for error in eg.exceptions:
+                print(error)
 
 
 class Task:
