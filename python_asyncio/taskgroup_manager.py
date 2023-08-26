@@ -1,52 +1,57 @@
 import asyncio
+from typing import Any, Type
 
 
 class TaskGroupManager:
     def __init__(self):
         self.queue = asyncio.Queue()
         self.task_group = None
+        self.results = tuple()
 
-    async def send_task(self, task):
-        await self.queue.put(task)
+    async def append_task(self, task: Type[Any], param: Type[Any]):
+        await self.queue.put(task.handle(param))
+
+    async def create_tasks(self):
+        tasks = []
+        while not self.queue.empty():
+            task = await self.queue.get()
+            tasks.append(self.task_group.create_task(task))
+            self.queue.task_done()
+        return tasks
 
     async def execute_tasks(self):
-        while True:
-            task = await self.queue.get()
-            self.task_group.create_task(task.execute())
-
-    async def run(self):
+        results = []
         self.task_group = asyncio.TaskGroup()
-        try:
-            async with self.task_group:
-                await self.execute_tasks()
-        except* Exception as eg:
-            for error in eg.exceptions:
-                print(error)
+        async with self.task_group:
+            tasks = await self.create_tasks()
+        for task in tasks:
+            results.append((task, task.result()))
+        await self.queue.join()
+        return results
 
 
 class Task:
     def __init__(self, name):
         self.name = name
 
-    async def execute(self):
-        print(f"Executing task: {self.name}")
+    async def handle(self, params):
+        print(f"Executing task: {self.name} with params: {params}")
         await asyncio.sleep(1)
         print(f"Task completed: {self.name}")
+        return "OK!"
 
 
 async def main():
-    tg_mgr = TaskGroupManager()
-
+    executor = TaskGroupManager()
     tasks = [
         Task("Task 1"),
         Task("Task 2"),
-        Task("Task 3"),
     ]
-
     for task in tasks:
-        await tg_mgr.send_task(task)
+        await executor.append_task(task, "ammm")
+    results = await executor.execute_tasks()
+    print(results)
 
-    await tg_mgr.run()
 
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
