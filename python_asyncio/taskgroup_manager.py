@@ -6,7 +6,6 @@ class TaskGroupManager:
     def __init__(self):
         self.queue = asyncio.Queue()
         self.task_group = None
-        self.results = tuple()
 
     async def append_task(self, task: Type[Any], param: Type[Any]):
         await self.queue.put(task.handle(param))
